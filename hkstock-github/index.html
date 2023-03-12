@@ -1,0 +1,339 @@
+﻿<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <meta content="IE=11.0000" http-equiv="X-UA-Compatible">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimal-ui">
+    <meta name="msapplication-TileColor" content="#f4f5f6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="#f4f5f6">
+    <meta name="apple-mobile-web-app-title" content="APP | HKStock">
+    <meta name="application-name" content="APP | HKStock">
+    <meta name="theme-color" content="#f4f5f6">
+    <meta name="description" content="APP | HKStock">
+    <title>APP | HKStock</title>
+    <link href="/" rel="canonical">
+    <link href="css/css.css" rel="stylesheet" />
+    <link href="css/normalize.css" rel="stylesheet" />
+    <link href="css/milligram.min.css" rel="stylesheet" />
+    <link href="css/main.css" rel="stylesheet" />
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="-1" />
+    <script src="js/j.js"></script>
+    <script src="js/tcsc.js"></script>
+    <script>
+        var myUSDRate = 7.75;                                //https://www.google.com/search?q=USD+HKD
+        var myStartPos = 1;
+        var myRefreshTimeinMilliSeconds = 600;              //500       //600 as chart update every second, 600 to avoid loading chart twice within 1 second
+        var myStockCodeAPI = "https://sqt.gtimg.cn/q=";      //http://finance.qq.com/wxzixuangu/index.htm#/stock/hk02669
+        var charturl = "";
+        // For todays date;
+        Date.prototype.today = function () {
+            return ((this.getDate() < 10) ? "0" : "") + this.getDate() + "/" + (((this.getMonth() + 1) < 10) ? "0" : "") + (this.getMonth() + 1) + "/" + this.getFullYear();
+        }
+        // For the time now
+        Date.prototype.timeNow = function () {
+            return ((this.getMinutes() < 10) ? "0" : "") + this.getMinutes() + ":" + ((this.getSeconds() < 10) ? "0" : "") + this.getSeconds();
+            //return ((this.getHours() < 10) ? "0" : "") + this.getHours() + ":" + ((this.getMinutes() < 10) ? "0" : "") + this.getMinutes() + ":" + ((this.getSeconds() < 10) ? "0" : "") + this.getSeconds() + "." + pad((new Date()).getMilliseconds(), 3);
+        }
+        function pad(n, width, z) {
+            z = z || '0';
+            n = n + '';
+            return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+        }
+        function isHKStockTime() {
+            var d = new Date();
+            var n = d.toUTCString().split(" ")[4];	//15:11:04
+            return (n >= "01:00:00" && n <= "08:30:00");
+        }
+        function isHKUSAStockTime() {
+            var d = new Date();
+            var n = d.toUTCString().split(" ")[4];	//15:11:04
+            return ((n >= "01:00:00" && n <= "08:30:00") || (n >= "13:30:00" && n <= "21:30:00"));
+            //HK TIME
+            //09: 00 - 16:30
+            //22: 00 - 05:30
+        }
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('#API').html(myStockCodeAPI);
+            if (!isHKUSAStockTime()) {
+                getStockCodeAPI();      //run once if market closed
+            }
+            window.setInterval(function () {
+                //$('#LastUpdate').html(new Date().timeNow());
+                if (isHKUSAStockTime()) {
+                    getStockCodeAPI();
+                } else {
+                    //closed market
+                }
+            }, myRefreshTimeinMilliSeconds);
+        });
+
+
+    </script>
+    <script>
+        function getStockCodeAPI() {
+            $.get(myStockCodeAPI, function (data, status) {
+                getHKHSIAPI();
+
+                var myArray = data.split(";");
+                //alert(myArray.length);
+                for (var i = 0; i < (myArray.length - 1); i++) {
+                    if (myArray[i].length > 0) {
+                        myArray[i] = myArray[i].trim();
+                    }
+                }
+
+                var balance = 0;
+                var invested = 0;
+                var turnout = "";
+
+                var s1 = (new Date()).getSeconds() % 10;     //Only Update Chart if Second Endings is 0 or 5
+                if (s1 == 0 || s1 == 5) {
+                    charturl = "<br />";
+                }
+
+                for (var j = 1; j < myStartPos; j++) {
+                    myStockCode = $('#SC' + pad(j, 3)).html().trim();
+                    //alert(myStockCode);
+                    for (var i = 0; myArray[i].length > 0 && i < (myArray.length - 1); i++) {
+
+                        var mySC = (myArray[i].split("=")[0]).replace("v_r_hk", "").replace("v_us", "");
+                        //var mySC = myArray[i].split("~")[2];      //Handle HKStock ONLY
+                        //alert(myStockCode + "; " + mySC);
+
+                        if (myStockCode == mySC) {
+                            $('#SN' + pad(j, 3)).html(convertSC2TC(myArray[i].split("~")[1]));
+							if (myArray[i].split("~")[1] == "Foley Trasimene Acquisition Corp II Class A") {
+								$('#SN' + pad(j, 3)).html("PAYSAFE LTD");
+							}
+							if (myArray[i].split("~")[1] == "Altimeter Growth Corp") {
+								$('#SN' + pad(j, 3)).html("SPAC Grab");
+							}
+							if (myArray[i].split("~")[1] == "Social Capital Hedosophia Holdings Corp V") {
+								$('#SN' + pad(j, 3)).html("SPAC SoFi @ 2021.05.27");
+							}
+
+                            if (/\d/.test(myStockCode)) {
+                                //HKStock
+                                $('#SP' + pad(j, 3)).html("<a target='_blank' href='http://finance.qq.com/wxzixuangu/index.htm#/stock/hk" + myStockCode + "'>" + myArray[i].split("~")[3] + "</a>");
+                            } else {
+                                //USStock
+                                //Link not quite work for USStock
+                                $('#SP' + pad(j, 3)).html("<a target='_blank' href='http://finance.qq.com/wxzixuangu/index.htm#/stock/us" + myStockCode + "'>" + myArray[i].split("~")[3] + "</a>");
+                            }
+                            //$('#SP' + pad(j, 3)).html(myArray[i].split("~")[3]);
+
+                            if (parseFloat(myArray[i].split("~")[31]) > 0) {
+                                $('#SCH' + pad(j, 3)).html("<span class='g'>" + myArray[i].split("~")[31] + " (" + myArray[i].split("~")[32] + "%)</span>");
+                            } else if (parseFloat(myArray[i].split("~")[31]) < 0) {
+                                $('#SCH' + pad(j, 3)).html("<span class='r'>" + myArray[i].split("~")[31] + " (" + myArray[i].split("~")[32] + "%)</span>");
+                            } else {
+                                $('#SCH' + pad(j, 3)).html(myArray[i].split("~")[31] + " (" + myArray[i].split("~")[32] + "%)");
+                            }
+                            //$('#SCH' + pad(j, 3)).html(myArray[i].split("~")[31] + " (" + myArray[i].split("~")[32] + "%)"); //default: no color
+                            //$('#SCHPERCENT' + pad(j, 3)).html(myArray[i].split("~")[32]);
+
+                            if (/\d/.test(myStockCode)) {
+                                //HKStock
+                                $('#SL' + pad(j, 3)).html(myArray[i].split("~")[60]);
+                            } else {
+                                //USStock
+                                $('#SL' + pad(j, 3)).html(1);
+                            }
+
+
+                            $('#STime' + pad(j, 3)).html(myArray[i].split("~")[30].split(" ")[1]);
+                            //$('#STime' + pad(j, 3)).html("<img width='40px' height='20px' src='https://imgnode.gtimg.cn/hq_img?code=hk" + myStockCode +"&type=minute&size=4&proj=web' />");
+
+                            var myGL = ((myArray[i].split("~")[3]) - ($('#SBP' + pad(j, 3)).html())) * ($('#SBL' + pad(j, 3)).html());
+                            //var myGL = parseInt(((myArray[i].split("~")[3]) - ($('#SBP' + pad(j, 3)).html())) * ($('#SBL' + pad(j, 3)).html())).toLocaleString();
+                            if (/\d/.test(myStockCode)) {
+                                //HKStock
+                                myGL = myGL.toLocaleString();
+                            } else {
+                                //USStock
+                                myGL = (myGL * myUSDRate).toLocaleString();
+                            }
+
+                            if (parseFloat(myGL) > 0) {
+                                $('#SGL' + pad(j, 3)).html("<span class='g'>" + myGL + "</span>");
+                            } else if (parseFloat(myGL) < 0) {
+                                $('#SGL' + pad(j, 3)).html("<span class='r'>" + myGL + "</span>");
+                            } else {
+                                $('#SGL' + pad(j, 3)).html(myGL);
+                            }
+                            //$('#SGL' + pad(j, 3)).html(myGL);
+
+                            if (/\d/.test(myStockCode)) {
+                                //HKStock
+                                //alert(myArray[i].split("~")[3]);
+                                //alert($('#SBL' + pad(j, 3)).html().trim());
+                                balance = balance + (myArray[i].split("~")[3] * ($('#SBL' + pad(j, 3)).html().trim()));
+                                invested = invested + (($('#SBP' + pad(j, 3)).html().trim()) * ($('#SBL' + pad(j, 3)).html().trim()));
+                            } else {
+                                //USStock
+                                balance = balance + (myArray[i].split("~")[3] * myUSDRate * ($('#SBL' + pad(j, 3)).html().trim()));
+                                invested = invested + (($('#SBP' + pad(j, 3)).html().trim()) * myUSDRate * ($('#SBL' + pad(j, 3)).html().trim()));
+                            }
+
+
+
+                            var s2 = (new Date()).getSeconds() % 10;     //Only Update Chart if Second Endings is 0 or 5 ==> 90 or 95
+                            if (s2 == 90 || s2 == 95) {
+                                if (charturl.indexOf(myStockCode) == -1) {
+                                    //Or: Update myRefreshTimeinMilliSeconds from 500 to 800 for Enough Chart Time Reload
+                                    if (/\d/.test(myStockCode)) {
+                                        //HKStock
+                                        charturl = charturl + "<img width='404px' height='248px' src='https://imgnode.gtimg.cn/hq_img?code=hk" + myStockCode + "&type=minute&size=1&proj=web&r=" + Math.random() + "'" + " /><br /><br />";
+                                    } else {
+                                        //USStock
+                                        charturl = charturl + "<img width='404px' height='248px' src='https://imgnode.gtimg.cn/hq_img?code=us" + myArray[i].split("~")[2] + "&type=minute&size=1&proj=web?" + Math.random() + "'" + " /><br /><br />";
+                                        //charturl = charturl + "<img width='404px' height='248px' src='https://imgnode.gtimg.cn/hq_img?code=usMSFT.OQ&type=minute&size=1&proj=quotecenter?'" + Math.random() + " /><br /><br />";
+                                        //charturl = charturl + "<img width='404px' height='248px' src='https://imgnode.gtimg.cn/hq_img?code=us" + myStockCode + "&type=minute&size=1&proj=web&r=" + Math.random() + "'" + " /><br /><br />";
+                                    }
+                                    //charturl = charturl + "<img width='404px' height='248px' src='https://imgnode.gtimg.cn/hq_img?code=hk" + myStockCode + "&type=minute&size=1&proj=web&r=" + Math.random() + "'" + " /><br /><br />";
+                                    //charturl = charturl + "<img width='235px' height='117px' src='https://imgnode.gtimg.cn/hq_img?code=hk" + myStockCode + "&type=minute&size=3&proj=web&r=" + Math.random() + "'" + " /><br /><br />";
+                                    //charturl = charturl + "<img width='505px' height='310px' src='https://imgnode.gtimg.cn/hq_img?code=hk" + myStockCode + "&type=minute&size=1&proj=web&r=" + Math.random() + "'" + " /><br /><br />";
+                                }
+                            }
+                        }
+                        else {
+                        }
+                    }
+                }
+
+
+                if (balance >= invested) {
+                    turnout = "+";
+                } else {
+                    //turnout = "-";
+                }
+                $('#console').html("<b>Balance: " + balance.toLocaleString() + " (" + turnout + ((balance - invested) / invested * 100).toLocaleString() + "%)<br /> Invested: " + invested.toLocaleString() + " (" + turnout + (balance - invested).toLocaleString() + ")</b>");
+                //alert(balance);
+
+                $('#chart').html(charturl + "<br /><a target='_blank' href='https://xueqiu.com/hq#exchange=HK&firstName=2&secondName=2_0&order=desc&order_by=current_year_percent'>雪球</a>" + "<br /><a target='_blank' href='https://m.zhitongcaijing.com/shares.html'>IPO</a>");
+            });
+        }
+    </script>
+    <script>
+        function getHKHSIAPI() {
+            $.get("https://sqt.gtimg.cn/q=r_hkHSI", function (data, status) {
+                var myArray = data.split("~");
+                for (var i = 0; i < (myArray.length - 1); i++) {
+                    if (myArray[i].length > 0) {
+                        myArray[i] = myArray[i].trim();
+                    }
+                    //alert(myArray[i]);
+                }
+                ////alert(myArray[30]);
+                var myLastUpdate = myArray[6];
+                myLastUpdate = myLastUpdate.substring(0, myLastUpdate.indexOf('.'));
+                myLastUpdate = myLastUpdate / 10000;
+                var myHSIChange = parseFloat(myArray[31]).toLocaleString() + " (" + myArray[32] + "%" + ")";
+                $('#HKHSI').html("<span style='color: black;padding-right: 1.5rem;'>" + parseFloat(myArray[3]).toLocaleString() + "</span>" + myHSIChange);
+                $('#LastUpdate').html(parseFloat(myLastUpdate).toLocaleString() + "&nbsp;億</span>");
+            });
+        }
+    </script>
+</head>
+<body>
+
+    <main class="wrapper">
+        <NAV class="navigation">
+            <SECTION class="container">
+                <A class="navigation-title" href="javascript:location.reload(true);">
+
+                    <H1 class="title" style="color:blueviolet;"><STRONG id="HKHSI">Tony To</STRONG></H1><span id="LastUpdate" style="float:right;"></span>
+                </A>
+            </SECTION>
+        </NAV><SECTION class="container" id="tables">
+            <DIV class="example">
+                <TABLE>
+                    <THEAD>
+                        <TR>
+                            <TH>#</TH>
+                            <TH class="optional">Name</TH>
+                            <TH>Price</TH>
+                            <TH>Change (%)</TH>
+                            <TH class="optional">Lot</TH>
+                            <TH class="optional">Time</TH>
+                            <TH class="optional">BL</TH>
+                            <TH class="optional">BP</TH>
+                            <TH>GL</TH>
+                        </TR>
+                    </THEAD>
+                    <TBODY>
+                        <script>
+                            var myUrlParams = (new URLSearchParams(window.location.search)).toString();
+                            myUrlParams = myUrlParams.substring(2); //remove "q="
+                            var myParamArray = myUrlParams.split("+");
+                            //var myParamArray = myUrlParams.split("_");
+                            for (var i = 0; i < (myParamArray.length); i++) {
+                                var myJSStock = myParamArray[i].split("*");
+                                var myJSStockCode = myJSStock[0];
+                                var myJSStockCodeBL = myJSStock[1];     //if only 5-Digit Stock Code
+                                var myJSStockCodeBP = myJSStock[2];     //if only 5-Digit Stock Code
+                                if (myJSStockCodeBL === undefined) { myJSStockCodeBL = 0; }
+                                if (myJSStockCodeBP === undefined) { myJSStockCodeBP = 0; }
+                                var myStartPosString = pad(myStartPos, 3);
+                                var myData = '<TR>\n' +
+                                    '<TD><span id="SC' + myStartPosString + '">{myJSStockCode}</span></TD>\n' +
+                                    '<TD class="optional"><span id="SN' + myStartPosString + '"></span></TD>\n' +
+                                    '<TD><span id="SP' + myStartPosString + '"></span></TD>\n' +
+                                    '<TD><span id="SCH' + myStartPosString + '"></span></TD>\n' +
+                                    '<TD class="optional"><span id="SL' + myStartPosString + '"></span></TD>\n' +
+                                    '<TD class="optional"><span id="STime' + myStartPosString + '"></span></TD>\n' +
+                                    '<TD class="optional"><span id="SBL' + myStartPosString + '">{myJSStockCodeBL}</span></TD>\n' +
+                                    '<TD class="optional"><span id="SBP' + myStartPosString + '">{myJSStockCodeBP}</span></TD>\n' +
+                                    '<TD><span id="SGL' + myStartPosString + '"></span></TD>\n' +
+                                    '</TR>';
+
+                                myData = myData.replace("{myJSStockCode}", myJSStockCode.toUpperCase());        //Handle US StockCode (MUST BE UPPERCASE)
+                                //myData = myData.replace("{myJSStockCode}", myJSStockCode);
+                                myData = myData.replace("{myJSStockCodeBL}", myJSStockCodeBL);
+                                myData = myData.replace("{myJSStockCodeBP}", myJSStockCodeBP);
+                                document.write(myData);
+                                myStartPos++;
+                            }
+
+                            for (var i = 1; i < myStartPos; i++) {
+                                var myStockCode = "";
+                                myStockCode = $('#SC' + pad(i, 3)).html().trim();
+                                if (myStockCode !== null && myStockCode !== '') {
+                                    if (myStockCode.length == 5 && /\d/.test(myStockCode) && myStockCodeAPI.indexOf("r_hk".concat(myStockCode)) == -1) {
+                                        if (myStockCodeAPI.indexOf("r_hk") > -1 || myStockCodeAPI.indexOf("us") > -1) {
+                                            myStockCodeAPI += ",";
+                                        }
+                                        myStockCodeAPI += "r_hk".concat(myStockCode);
+                                    }
+                                    else if (myStockCodeAPI.indexOf("us".concat(myStockCode)) == -1) {
+                                        if (myStockCodeAPI.indexOf("r_hk") > -1 || myStockCodeAPI.indexOf("us") > -1) {
+                                            myStockCodeAPI += ",";
+                                        }
+                                        myStockCodeAPI += "us".concat(myStockCode);
+                                    }
+                                }
+                                //if (myStockCode !== null && myStockCode !== '' && myStockCode.length == 5 && myStockCodeAPI.indexOf("r_hk".concat(myStockCode)) == -1) {
+                                //    if (myStockCodeAPI.indexOf("r_hk") > -1) {
+                                //        myStockCodeAPI += ",";
+                                //    }
+                                //    myStockCodeAPI += "r_hk".concat(myStockCode);
+                                //}
+                            }
+                        </script>
+                    </TBODY>
+                </TABLE>
+            </DIV>
+            <span id="API" style="word-wrap:break-word; display:none; visibility: hidden;"></span>
+            <DIV id="console"></DIV>
+            <DIV id="chart"></DIV>
+        </SECTION>
+        <FOOTER class="footer" style="display:none; visibility: hidden;"></FOOTER>
+    </main>
+</body>
+</html>
