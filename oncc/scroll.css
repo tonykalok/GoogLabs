@@ -1,0 +1,77 @@
+﻿.scroll-top {
+    position: fixed;
+    bottom: 270px;
+    right: 10px;
+    z-index: 99;
+    background: white;
+    color: #7f9298;
+    padding: 0px;
+    font-weight: bold;
+    line-height: normal;
+    border: 1px solid #7f9298;
+}
+
+.scroll-home {
+    position: fixed;
+    bottom: 218px;
+    right: 10px;
+    z-index: 99;
+    background: white;
+    color: #7f9298;
+    padding: 0px;
+    font-weight: bold;
+    line-height: normal;
+    border: 1px solid #7f9298;
+}
+
+.scroll-cn {
+    position: fixed;
+    bottom: 166px;
+    right: 10px;
+    z-index: 99;
+    background: white;
+    color: #7f9298;
+    padding: 0px;
+    font-weight: bold;
+    line-height: normal;
+    border: 1px solid #7f9298;
+}
+
+.scroll-world {
+    position: fixed;
+    bottom: 114px;
+    right: 10px;
+    z-index: 99;
+    background: white;
+    color: #7f9298;
+    padding: 0px;
+    font-weight: bold;
+    line-height: normal;
+    border: 1px solid #7f9298;
+}
+
+.scroll-fin {
+    position: fixed;
+    bottom: 62px;
+    right: 10px;
+    z-index: 99;
+    background: white;
+    color: #7f9298;
+    padding: 0px;
+    font-weight: bold;
+    line-height: normal;
+    border: 1px solid #7f9298;
+}
+
+.scroll-bottom {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    z-index: 99;
+    background: white;
+    color: #7f9298;
+    padding: 0px;
+    font-weight: bold;
+    line-height: normal;
+    border: 1px solid #7f9298;
+}
