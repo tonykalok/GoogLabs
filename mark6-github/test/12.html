@@ -1,0 +1,77 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animated Number Generation</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+
+<div>
+  <h2>List 1:</h2>
+  <ul id="list1"></ul>
+</div>
+
+<div>
+  <h2>List 2:</h2>
+  <ul id="list2"></ul>
+</div>
+
+<script>
+$(document).ready(function() {
+  animateNumbers(1, 49, 2000, function(numbers) {
+    var list1 = generateUniqueNumbers(numbers, 6);
+    displayList(list1, "#list1");
+  });
+
+  animateNumbers(1, 49, 2000, function(numbers) {
+    var list2 = generateUniqueNumbers(numbers, 6);
+    displayList(list2, "#list2");
+  });
+});
+
+function animateNumbers(min, max, duration, callback) {
+  var numbers = [];
+  var interval = (max - min) / duration;
+
+  var counter = min;
+  var timer = setInterval(function() {
+    if (counter >= max) {
+      clearInterval(timer);
+      callback(numbers);
+    } else {
+      numbers.push(Math.ceil(counter));
+      counter += interval;
+    }
+  }, 1000 / duration);
+}
+
+function generateUniqueNumbers(numbers, count) {
+  var uniqueNumbers = [];
+
+  while (uniqueNumbers.length < count) {
+    var randomIndex = Math.floor(Math.random() * numbers.length);
+    var randomNumber = numbers[randomIndex];
+
+    if (uniqueNumbers.indexOf(randomNumber) === -1) {
+      uniqueNumbers.push(randomNumber);
+      numbers.splice(randomIndex, 1);
+    }
+  }
+
+  return uniqueNumbers;
+}
+
+function displayList(numbers, elementId) {
+  var $list = $(elementId);
+
+  $.each(numbers, function(index, number) {
+    var $li = $("<li>").text(number);
+    $list.append($li);
+  });
+}
+</script>
+
+</body>
+</html>

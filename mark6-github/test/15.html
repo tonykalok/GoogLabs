@@ -1,0 +1,69 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animated Number Generation</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<style>
+  .hidden {
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div>
+  <h2>List 1:</h2>
+  <ul id="list1"></ul>
+</div>
+
+<div>
+  <h2>List 2:</h2>
+  <ul id="list2"></ul>
+</div>
+
+<script>
+$(document).ready(function() {
+  animateNumbers(1, 49, 6, 5000, "#list1");
+  setTimeout(function() {
+    animateNumbers(1, 49, 6, 5000, "#list2");
+  }, 5000);
+});
+
+function animateNumbers(min, max, count, duration, listId) {
+  var interval = (max - min) / duration;
+  var counter = min;
+
+  var numbersPool = generateNumbersPool(min, max);
+
+  var timer = setInterval(function() {
+    if (counter >= max || numbersPool.length === 0) {
+      clearInterval(timer);
+    } else {
+      var randomNumberIndex = Math.floor(Math.random() * numbersPool.length);
+      var randomNumber = numbersPool.splice(randomNumberIndex, 1)[0];
+
+      $(listId).append('<li class="hidden">' + Math.ceil(randomNumber) + '</li>');
+      $(listId + ' li:last-child').fadeIn();
+      counter += interval;
+      count--;
+
+      if (count <= 0) {
+        clearInterval(timer);
+      }
+    }
+  }, 1000);
+}
+
+function generateNumbersPool(min, max) {
+  var pool = [];
+  for (var i = min; i <= max; i++) {
+    pool.push(i);
+  }
+  return pool;
+}
+</script>
+
+</body>
+</html>

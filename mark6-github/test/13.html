@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animated Number Generation</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<style>
+  .hidden {
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div>
+  <h2>List 1:</h2>
+  <ul id="list1"></ul>
+</div>
+
+<div>
+  <h2>List 2:</h2>
+  <ul id="list2"></ul>
+</div>
+
+<script>
+$(document).ready(function() {
+  animateNumbers(1, 49, 5000, "#list1");
+  setTimeout(function() {
+    animateNumbers(1, 49, 5000, "#list2");
+  }, 5000);
+});
+
+function animateNumbers(min, max, duration, listId) {
+  var interval = (max - min) / duration;
+  var counter = min;
+
+  var timer = setInterval(function() {
+    if (counter >= max) {
+      clearInterval(timer);
+    } else {
+      $(listId).append('<li class="hidden">' + Math.ceil(counter) + '</li>');
+      $(listId + ' li:last-child').fadeIn();
+      counter += interval;
+    }
+  }, 1000);
+}
+</script>
+
+</body>
+</html>
