@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="1">
+    <title>Live</title>
+</head>
+<body>
+    <div id="result"></div>
+	<span id="spanResult"></span>
+
+    <script>
+        // URL to fetch data from
+        //const url = "https://lsc.fn.sportradar.com/common/zht/Asia:Shanghai/gismo/sport_matches/0/2024-05-11";
+        const url = "https://lsc.fn.sportradar.com/hkjc/zht/Asia:Shanghai/gismo/event_fullfeed/0/55";
+
+        // Fetch data from the URL
+        fetch(url)
+            .then(response => {
+                // Check if the request was successful
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                // Parse the response as JSON
+                return response.json();
+            })
+            .then(data => {
+                // Display the data in the result div
+                
+                
+jsonData = data;
+// Initialize an array to collect match records
+const matchRecords = [];
+
+// Function to add match records with results
+const addMatchRecord = (homeTeam, awayTeam, result, durationMinutes, status) => {
+  const homeName = homeTeam.name;
+  const awayName = awayTeam.name;
+  const resultStr = result ? `${result.home}:${result.away}` : '--:--'; // Default to '--:--' if no result is given
+  
+    if (result && result.home != null && result.away != null && status != '完場' && status != '十二碼決勝後') {
+		matchRecords.push(`${durationMinutes}' ${homeName} ${resultStr} ${awayName}`);
+  } else {
+		//matchRecords.push(`${homeName} --:-- ${awayName}`);
+  }
+};
+
+// Extract match records from the given data
+jsonData.doc.forEach((eventDoc) => {
+  eventDoc.data.forEach((category) => {
+    if (category.realcategories) {
+      category.realcategories.forEach((realCategory) => {
+        if (realCategory.tournaments) {
+          realCategory.tournaments.forEach((tournament) => {
+            if (tournament.matches) {
+              tournament.matches.forEach((match) => {
+                if (match.teams) {
+                  // Check if the match has a 'result' node
+                  const result = match.result || null; // Use null if there's no result
+                  addMatchRecord(match.teams.home, match.teams.away, result, parseInt((match.updated_uts-match._dt.uts)/60), match.status.name);
+                }
+              });
+            }
+          });
+        }
+      });
+    }
+  });
+});
+
+// Output the match records with results
+console.log("Match Records:");
+matchRecords.forEach((record, index) => {
+  console.log(`${record}`);
+  //console.log(`${index + 1}. ${record}`);
+  
+  document.getElementById("spanResult").innerHTML += `<h3>${record}<br /></h3>`;
+});
+
+                
+                
+                
+                
+                //document.getElementById("spanResult").innerHTML = "<b>" + matchRecords + "</b>";
+                //document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                // Display any errors
+                console.error('Error:', error);
+            });
+    </script>
+</body>
+</html>
