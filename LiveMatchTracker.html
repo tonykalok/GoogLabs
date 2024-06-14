@@ -1,0 +1,200 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<title>Live Match Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="refresh" content="3">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+* {
+  box-sizing: border-box;
+}
+.clsInline {
+	display: inline !important;
+}
+</style>
+</head>
+<body style="background-color:#ECECF0;padding:15px;text-align:center;">
+
+<!--<div style="background-color:#e5e5e5;padding:15px;text-align:center;" id="matchList">
+  <h1>Hello World</h1>
+</div>-->
+
+<script>
+
+var matches = null;
+var filteredMatches = null;
+
+const timeToday = new Date();
+//console.log(formatDate(timeToday));
+
+const timeYesterday = new Date(timeToday);
+timeYesterday.setDate(timeToday.getDate() - 1);
+//console.log(formatDate(timeYesterday));
+
+const timeTomorrow = new Date(timeToday);
+//+2 for more
+timeTomorrow.setDate(timeToday.getDate() + 2);
+//console.log(formatDate(timeTomorrow));
+
+// Function to format date string
+function formatKickOffTime(dateString) {
+  const date = new Date(dateString);
+  
+  // Extract individual components
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  // Construct the formatted string
+  return `${month}-${day} ${hours}:${minutes}`;
+  //return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+function formatDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}${month}${day}`;
+}
+
+function formatDateISO(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+$.ajax({
+  url: 'https://info.cld.hkjc.com/graphql/base/',
+  crossDomain: true,
+  method: 'post',
+  headers: {
+    'accept': '*/*',
+    'accept-language': 'en-US,en;q=0.9,zh-Hant;q=0.8,zh;q=0.7',
+    'cache-control': 'no-cache',
+    // 'dnt': '1',
+    // 'origin': 'https://bet2.hkjc.com',
+    'pragma': 'no-cache',
+    'priority': 'u=1, i',
+    // 'referer': 'https://bet2.hkjc.com/',
+    // 'sec-ch-ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+    // 'sec-ch-ua-mobile': '?1',
+    // 'sec-ch-ua-platform': '"Android"',
+    // 'sec-fetch-dest': 'empty',
+    // 'sec-fetch-mode': 'cors',
+    // 'sec-fetch-site': 'same-site',
+    // 'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36'
+  },
+  contentType: 'application/json',
+  data: JSON.stringify({
+    'query': '\n      query matchList($startIndex: Int, $endIndex: Int,$startDate: String, $endDate: String, $matchIds: [String], $tournIds: [String], $fbOddsTypes: [FBOddsType]!, $fbOddsTypesM: [FBOddsType]!, $inplayOnly: Boolean, $featuredMatchesOnly: Boolean, $frontEndIds: [String], $earlySettlementOnly: Boolean, $showAllMatch: Boolean) {\n        matches(startIndex: $startIndex,endIndex: $endIndex, startDate: $startDate, endDate: $endDate, matchIds: $matchIds, tournIds: $tournIds, fbOddsTypes: $fbOddsTypesM, inplayOnly: $inplayOnly, featuredMatchesOnly: $featuredMatchesOnly, frontEndIds: $frontEndIds, earlySettlementOnly: $earlySettlementOnly, showAllMatch: $showAllMatch) {\n          id\n          frontEndId\n          matchDate\n          kickOffTime\n          status\n          updateAt\n          sequence\n          esIndicatorEnabled\n          homeTeam {\n            id\n            name_en\n            name_ch\n          }\n          awayTeam {\n            id\n            name_en\n            name_ch\n          }\n          tournament {\n            id\n            frontEndId\n            nameProfileId\n            isInteractiveServiceAvailable\n            code\n            name_en\n            name_ch\n          }\n          isInteractiveServiceAvailable\n          inplayDelay\n          venue {\n            code\n            name_en\n            name_ch\n          }\n          tvChannels {\n            code\n            name_en\n            name_ch\n          }\n          liveEvents {\n            id\n            code\n          }\n          featureStartTime\n          featureMatchSequence\n          poolInfo {\n            normalPools\n            inplayPools\n            sellingPools\n            ntsInfo\n            entInfo\n          }\n          runningResult {\n            homeScore\n            awayScore\n            corner\n          }\n          runningResultExtra {\n            homeScore\n            awayScore\n            corner\n          }\n          adminOperation {\n            remark {\n              typ\n            }\n          }\n          foPools(fbOddsTypes: $fbOddsTypes) {\n            id\n            status\n            oddsType\n            instNo\n            inplay\n            name_ch\n            name_en\n            updateAt\n            expectedSuspendDateTime\n            lines {\n              lineId\n              status\n              condition\n              main\n              combinations {\n                combId\n                str\n                status\n                offerEarlySettlement\n                currentOdds\n                selections {\n                  selId\n                  str\n                  name_ch\n                  name_en\n                }\n              }\n            }\n          }\n        }\n      }\n      ',
+    'variables': {
+      'fbOddsTypes': [
+        'HAD',
+        'EHA'
+      ],
+      'fbOddsTypesM': [
+        'ALL'
+      ],
+      'inplayOnly': true,
+      'featuredMatchesOnly': false,
+      'startDate': formatDate(timeYesterday),
+      'endDate': formatDate(timeTomorrow),
+      'tournIds': null,
+      'matchIds': null,
+      'tournId': null,
+      'tournProfileId': null,
+      'subType': null,
+      'startIndex': null,
+      'endIndex': null,
+      'frontEndIds': null,
+      'earlySettlementOnly': false,
+      'showAllMatch': false,
+      'tday': null,
+      'tIdList': null
+    }
+  })
+}).done(function(response) {
+
+	//console.log(response.data);
+	//console.log(response);
+	//$("body").append(formatKickOffTime(timeToday), ` `); 
+  
+	matches = response.data.matches;
+	filteredMatches = matches.filter(match => match.esIndicatorEnabled && match.runningResult !== null);
+	console.log(matches);
+	
+	const timeNow = new Date();
+	
+	$("body").append(`<b>即場 (` + filteredMatches.length + ` of ` + matches.length + `)</b><br />`);
+	//$("body").append(`` + formatKickOffTime(timeToday) + `&nbsp;&nbsp;<b>即場 (` + filteredMatches.length + ` of ` + matches.length + `)</b><br />`);
+	
+	// Applying the formatting function to the matches
+	matches.forEach(match => {
+	  match.kickOffTimeFormatted = formatKickOffTime(match.kickOffTime);
+	});
+	
+	// Loop through filteredMatches to get all kickOffTime
+	matches.forEach(match => {
+	
+	  //https://bet.hkjc.com/football/info/images/icon_corner.gif
+	  //console.log(`${match.kickOffTime} ${match.homeTeam.name_ch} ${match.runningResult.homeScore}:${match.runningResult.awayScore} ${match.awayTeam.name_ch} (${match.runningResult.corner} Corner)`);
+	  //$("body").append(`${match.kickOffTime} ${match.homeTeam.name_ch} ${match.runningResult.homeScore}:${match.runningResult.awayScore} ${match.awayTeam.name_ch} &nbsp;&nbsp;<img src="https://bet.hkjc.com/football/info/images/icon_corner.gif">${match.runningResult.corner}<br />`); 
+	  
+	  var varEarlySettlement = "";
+	  if (match.esIndicatorEnabled) {
+		varEarlySettlement = "<img class='clsInline' src = 'https://bet.hkjc.com/info/Include/images/cash_out_g.svg' alt='Early Settlement'/>";
+	  }
+
+	  const timeInMatch = new Date(`${match.kickOffTime}`);
+	  //const timeInMatch = new Date(`2024-06-14T21:45:00.000+08:00`);
+	  var varBgColorNotStarted = "";
+	  if (timeNow >= timeInMatch) {
+		var timeDifference = Math.floor((timeNow.getTime() - timeInMatch.getTime()) / 60000);
+		//console.log(`Time difference: ${timeDifference} minutes`);
+		if (timeDifference > 60) {
+			timeDifference = timeDifference - 15;
+			//console.log(`Time difference: ${timeDifference} minutes`);
+		}
+		else {
+			if (timeDifference > 45) {
+				timeDifference = 45;
+			}
+		}
+	  }
+	  else {
+		  //console.log('The match has not started yet.');
+	  }
+	  
+	  // ${match.tournament.name_ch}
+	  var varFlag = "<img class='clsInline' src = 'https://bet.hkjc.com/ContentServer/jcbw/images/flag_" + `${match.tournament.code}` + ".gif' alt='Flag'/>";
+	  
+  	  if (match.runningResult !== null) {
+	    $("body").append(`<div class="divider"></div> `, timeDifference,`'&nbsp;&nbsp;`, varFlag, `&nbsp;&nbsp;`, varEarlySettlement,` ${match.homeTeam.name_ch} vs ${match.awayTeam.name_ch} &nbsp;&nbsp;<img src="https://bet.hkjc.com/football/info/images/icon_corner.gif">${match.runningResult.corner}<br /><b>${match.runningResult.homeScore} : ${match.runningResult.awayScore}</b><br />`); 
+	  } else {
+	    $("body").append(`<div class="divider"></div> ${match.kickOffTimeFormatted}&nbsp;&nbsp;`, varFlag, `&nbsp;&nbsp;`, varEarlySettlement,` ${match.homeTeam.name_ch} vs ${match.awayTeam.name_ch} <br />`); 
+	  }
+	});
+	
+	// Check if scroll position is stored in localStorage
+	var scrollPosition = localStorage.getItem('scrollPosition');
+	if (scrollPosition) {
+		$(window).scrollTop(scrollPosition - 0);
+	}
+});
+
+    $(document).ready(function() {
+      // Update scroll position in localStorage on scroll and other events
+      $(window).on('scroll resize mouseup touchend', function() {
+        localStorage.setItem('scrollPosition', $(window).scrollTop());
+      });
+    });
+
+</script>  
+</body>
+</html>
