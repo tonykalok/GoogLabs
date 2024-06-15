@@ -173,9 +173,16 @@ $.ajax({
 	  
 	  // ${match.tournament.name_ch}
 	  var varFlag = "<img class='clsInline' src = 'https://bet.hkjc.com/ContentServer/jcbw/images/flag_" + `${match.tournament.code}` + ".gif' alt='Flag'/>";
-	  
-  	  if (match.runningResult !== null) {
-	    $("body").append(`<div class="divider"></div> `, timeDifference,`'&nbsp;&nbsp;`, varFlag, `&nbsp;&nbsp;`, varEarlySettlement,` ${match.homeTeam.name_ch} vs ${match.awayTeam.name_ch} &nbsp;&nbsp;<img src="https://bet.hkjc.com/football/info/images/icon_corner.gif">${match.runningResult.corner}<br /><b>${match.runningResult.homeScore} : ${match.runningResult.awayScore}</b><br />`); 
+
+  	  if (timeNow >= timeInMatch) {
+		if (match.runningResult !== null) {
+			$("body").append(`<div class="divider"></div> `, timeDifference,`'&nbsp;&nbsp;`, varFlag, `&nbsp;&nbsp;`, varEarlySettlement,` ${match.homeTeam.name_ch} vs ${match.awayTeam.name_ch} &nbsp;&nbsp;<img class="clsInline" src="https://bet.hkjc.com/football/info/images/icon_corner.gif">&nbsp;${match.runningResult.corner}<br /><b>${match.runningResult.homeScore} : ${match.runningResult.awayScore}</b><br />`); 
+		}
+		else
+		{
+			$("body").append(`<div class="divider"></div> `, timeDifference,`'&nbsp;&nbsp;`, varFlag, `&nbsp;&nbsp;`, varEarlySettlement,` ${match.homeTeam.name_ch} vs ${match.awayTeam.name_ch} &nbsp;&nbsp;<img class="clsInline" src="https://bet.hkjc.com/football/info/images/icon_corner.gif">&nbsp;0<br /><b>0 : 0</b><br />`); 
+		}
+		
 	  } else {
 	    $("body").append(`<div class="divider"></div> ${match.kickOffTimeFormatted}&nbsp;&nbsp;`, varFlag, `&nbsp;&nbsp;`, varEarlySettlement,` ${match.homeTeam.name_ch} vs ${match.awayTeam.name_ch} <br />`); 
 	  }
